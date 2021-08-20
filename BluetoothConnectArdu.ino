@@ -5,19 +5,28 @@
 #include <Arduino_LPS22HB.h>
 
 
+typedef struct __attribute__( ( packed ) )
+{
+  float accX;
+ float accY;
+ float accZ;
+ float angVelX;
+ float angVelY;
+ float angVelZ;
+} m5600_data_t;
+
+typedef union
+{
+  m5600_data_t values;
+  uint8_t bytes[ 24 ];
+} m5600_data_ut;
+
+m5600_data_ut m5600Data;
+
 // Declare Bluetooth service name, and characteristics. All are standard GATT services.
 BLEService environmentalSensingService("181A");
 
-
-
-BLEFloatCharacteristic accXCharacteristic("0021", BLERead); // 32-bit unsigned in Pascals, 1 decimal place.
-BLEFloatCharacteristic accYCharacteristic("0022", BLERead); // 32-bit unsigned in Pascals, 1 decimal place.
-BLEFloatCharacteristic accZCharacteristic("0023", BLERead); // 32-bit unsigned in Pascals, 1 decimal place.
-BLEFloatCharacteristic angVelocityXCharacteristic("0031", BLERead); // 32-bit unsigned in Pascals, 1 decimal place.
-BLEFloatCharacteristic angVelocityYCharacteristic("0032", BLERead); // 32-bit unsigned in Pascals, 1 decimal place.
-BLEFloatCharacteristic angVelocityZCharacteristic("0033", BLERead); // 32-bit unsigned in Pascals, 1 decimal place.
-
-
+BLECharacteristic allCharacteristic( "0011", BLERead | BLENotify, sizeof m5600Data.bytes ); // on the peripheral side
 int cou = 0;
 // Error pulse of death. Loops forever. Only used if there are problems.
 void error_pulse() {
@@ -60,16 +69,8 @@ void setup() {
   BLE.setLocalName("Nano33BLE");
   BLE.setAdvertisedService(environmentalSensingService);
 
-  
+  environmentalSensingService.addCharacteristic(allCharacteristic);
 
-  environmentalSensingService.addCharacteristic(accXCharacteristic);
-  environmentalSensingService.addCharacteristic(accYCharacteristic);
-  environmentalSensingService.addCharacteristic(accZCharacteristic);
-  environmentalSensingService.addCharacteristic(angVelocityXCharacteristic);
-  environmentalSensingService.addCharacteristic(angVelocityYCharacteristic);
-  environmentalSensingService.addCharacteristic(angVelocityZCharacteristic);
-
-  
   // Make the service available.
   BLE.addService(environmentalSensingService);
   BLE.setConnectable(true);
@@ -117,18 +118,16 @@ void loop() {
             Serial.print(',');
             Serial.println(angVelZ);
       }
-      
+      m5600Data.values.accX = accX;
+      m5600Data.values.accY = accY;
+      m5600Data.values.accZ = accZ;
+      m5600Data.values.angVelX = angVelX;
+      m5600Data.values.angVelY = angVelY;
+      m5600Data.values.angVelZ = angVelZ;
       // Update Bluetooth characteristics with new values.
-    
-      accXCharacteristic.writeValue((float) (accX)); // Shift for two decimal places.
-      accYCharacteristic.writeValue((float) (accY)); // Shift for two decimal places.
-      accZCharacteristic.writeValue((float) (accZ)); // Shift for two decimal places.
-      angVelocityXCharacteristic.writeValue((float) (angVelX)); // Shift for two decimal places.
-      angVelocityYCharacteristic.writeValue((float) (angVelY)); // Shift for two decimal places.
-      angVelocityZCharacteristic.writeValue((float) (angVelZ)); // Shift for two decimal places.
-
+        allCharacteristic.writeValue( m5600Data.bytes, 24 );
       // Delay between updates. (Don't make too long of connections start to timeout.)
-      delay(100);
+      delay(50);
     }
 
     // Turn off LED when connection is dropped. 
