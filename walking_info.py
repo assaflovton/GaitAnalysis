@@ -5,7 +5,6 @@ import csv
 import time
 import matplotlib.pyplot as plt
 import os
-import numpy as np
 
 patient_id = input("insert patient id:")
 script_dir = os.path.dirname(__file__)
@@ -25,7 +24,7 @@ meas_list = []
 async def run(address):
     async with BleakClient(address) as client:
         print("Connected....Timer started")
-        timeout = time.time() + 20 * 1  # 20 secs from now
+        timeout = time.time() + 40 * 1  # 40 secs sample
         start_time = time.time()
         while 1:
             curr_time = round((time.time() - start_time) * 1000)
@@ -82,7 +81,7 @@ with open(data_file_name) as csv_file:
 plt.plot(time, acc)
 plt.xlabel('time [milliseconds]')
 plt.ylabel('acceleration [m/s^2]')
-plt.title('patient id: '+patient_id+'acceleration as a function of time')
+plt.title('patient id: '+patient_id+' acceleration as a function of time')
 sample_file_name = patient_id + "_fig_acc"
 plt.savefig(results_dir + sample_file_name)
 # plt.show()
