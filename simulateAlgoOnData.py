@@ -11,7 +11,7 @@ if not os.path.isdir(results_dir):
     os.makedirs(results_dir)
 
 # open every id_data.csv file and generate plots, all plots saved into ResultsAnalyzed folder
-for patient_id in range(6, 40):  # choose the id's to perform analysis on
+for patient_id in range(40, 41):  # choose the id's to perform analysis on
 
     sample_file_name = str(patient_id) + "_data"
     data_file_name = str(patient_id) + "_data.csv"
@@ -31,15 +31,15 @@ for patient_id in range(6, 40):  # choose the id's to perform analysis on
             next(data)
         for row in data:  # get data from csv file
             time.append(float(row[0]))
-            acc_x.append(float(row[1]))
-            acc_y.append(float(row[2]))
-            acc_z.append(float(row[3]))
-            ang_vel_x.append(float(row[4]))
-            ang_vel_y.append(float(row[5]))
-            ang_vel_z.append(float(row[6]))
-            acc.append((float(row[1]) ** 2 + float(row[2]) ** 2 + float(row[3]) ** 2) ** 0.5)  # size of acc
-            ang_vel.append((float(row[4]) ** 2 + float(row[5]) ** 2
-                            + float(row[6]) ** 2) ** 0.5)  # size of angular velocity
+            # acc_x.append(float(row[1]))
+            # acc_y.append(float(row[2]))
+            # acc_z.append(float(row[3]))
+            # ang_vel_x.append(float(row[4]))
+            ang_vel_y.append(float(row[1]))
+            # ang_vel_z.append(float(row[6]))
+            # acc.append((float(row[1]) ** 2 + float(row[2]) ** 2 + float(row[3]) ** 2) ** 0.5)  # size of acc
+            # ang_vel.append((float(row[4]) ** 2 + float(row[5]) ** 2
+            #                + float(row[6]) ** 2) ** 0.5)  # size of angular velocity
 
 
 
@@ -91,7 +91,7 @@ for patient_id in range(6, 40):  # choose the id's to perform analysis on
     fig, ax = plt.subplots(figsize=(20, 10))
     plt.grid()
     plt.plot(time, ang_vel_y, label = 'Graph')
-    plt.plot(time, ang_vel_y,'co', label='Original data')
+    #plt.plot(time, ang_vel_y,'co', label='Original data')
     plt.plot(sim_time_MS, sim_indexes_to_mark_MS, "r+", label='MS')
     plt.plot(sim_time_HS, sim_indexes_to_mark_HS, "g+", label='HS')
     plt.plot(sim_time_TF, sim_indexes_to_mark_TF, "b+", label='TF')
