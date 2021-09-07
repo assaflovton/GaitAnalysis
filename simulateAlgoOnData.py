@@ -47,7 +47,7 @@ for patient_id in range(70, 71):  # choose the id's to perform analysis on
 
     # --------------- CONSTANTS -----------------
 
-    INITIAL_BETWEEN_STATES_TIME = 160
+    INITIAL_TIME_BETWEEN_STATES = 160
 
     INITIAL_AMPLITUDE = 0
 
@@ -55,13 +55,25 @@ for patient_id in range(70, 71):  # choose the id's to perform analysis on
 
     RESTART_THRESH = 20000
 
+    TIME_FLEX = 0.8
+
+    VALUE_FLEX = 0.7
+
+    AVG_CHANGE_RATE = 0.2
+
+    VALID_STEP_RATIO = 0.4
+
+    CORRELATION_RATIO = 0.7
+
+    STATE_SWITCH_THRESH = 0.5
+
     # ----------- Thresholds ------------------
 
     step_state = 3
 
-    TFtoMS = INITIAL_BETWEEN_STATES_TIME
-    MStoHS = INITIAL_BETWEEN_STATES_TIME
-    HStoTF = INITIAL_BETWEEN_STATES_TIME
+    TFtoMS = INITIAL_TIME_BETWEEN_STATES
+    MStoHS = INITIAL_TIME_BETWEEN_STATES
+    HStoTF = INITIAL_TIME_BETWEEN_STATES
 
     prev_HS = INITIAL_AMPLITUDE
     prev_MS = INITIAL_AMPLITUDE
@@ -92,42 +104,51 @@ for patient_id in range(70, 71):  # choose the id's to perform analysis on
             avg_vel = 0
             avg_time = 0
             if len(rt_vals) >= 5:
+
+                # restart every restart_thresh to mitigate errors
                 if rt_times[-3] - restart_time > RESTART_THRESH and step_state == 3:
                     restart_time = rt_times[-3]
                     prev_MS = INITIAL_AMPLITUDE
-                    prev_MS = INITIAL_AMPLITUDE
+                    prev_HS = INITIAL_AMPLITUDE
+                    TFtoMS = INITIAL_TIME_BETWEEN_STATES
+                    MStoHS = INITIAL_TIME_BETWEEN_STATES
+                    HStoTF = INITIAL_TIME_BETWEEN_STATES
 
-                if rt_times[-3] - prev_step_time > step_thresh:
+                # if we passed step_thresh without a step then restart state
+                # if we missed TF than restart state
+                if (rt_times[-3] - prev_step_time > step_thresh) or\
+                        ((rt_vals[-3] > STATE_SWITCH_THRESH * prev_MS) and step_state == 2):
                     step_state = 3
-                    step_thresh = STEP_MAX_TIME
 
                 # MS is a global max
                 if rt_vals[-3] > rt_vals[-1] and rt_vals[-3] > rt_vals[-2] and \
                         rt_vals[-3] > rt_vals[-4] and rt_vals[-3] > rt_vals[-5] and \
-                        rt_vals[-3] > 0.8 * prev_MS and rt_times[-3] - prev_state_time >= 0.8 * TFtoMS:
+                        rt_vals[-3] > VALUE_FLEX * prev_MS and \
+                        rt_times[-3] - prev_state_time >= TIME_FLEX * TFtoMS:
                     # state is MS,  in realtime only changes state
                     MS_times.append(rt_times[-3])
                     MS_vals.append(rt_vals[-3])
                     step_state = 1
                     prev_MS = rt_vals[-3]
-                    sc_thresh = min(step_thresh, rt_times[-3] - prev_state_time + 300)
                     prev_step_time = rt_times[-3]
-                    if TFtoMS * 0.6 < (rt_times[-3] - prev_state_time) < TFtoMS * 1.4:
-                        TFtoMS = (0.8 * TFtoMS + 0.2 * (rt_times[-3] - prev_state_time))
+                    if TFtoMS * (1 - VALID_STEP_RATIO) < (rt_times[-3] - prev_state_time) < TFtoMS * (
+                            1 + VALID_STEP_RATIO):
+                        TFtoMS = ((1 - AVG_CHANGE_RATE) * TFtoMS + AVG_CHANGE_RATE * (rt_times[-3] - prev_state_time))
                     prev_state_time = rt_times[-3]
 
 
                 # HS state is a local minimum after MS
                 elif rt_vals[-2] > rt_vals[-3] < rt_vals[-4] and \
-                        step_state == 1 and -0.7 * prev_MS < rt_vals[-3] < 0 and \
-                        rt_times[-3] - prev_state_time >= 0.8 * MStoHS:
+                        step_state == 1 and -CORRELATION_RATIO * prev_MS < rt_vals[-3] < 0 and \
+                        rt_times[-3] - prev_state_time >= TIME_FLEX * MStoHS:
                     # state is MS, in realtime changes state and starts vibration
                     HS_times.append(rt_times[-3])
                     HS_vals.append(rt_vals[-3])
                     step_state = 2
                     prev_HS = rt_vals[-3]
-                    if MStoHS * 0.6 < (rt_times[-3] - prev_state_time) < MStoHS * 1.4:
-                        MStoHS = (0.8 * MStoHS + 0.2 * (rt_times[-3] - prev_state_time))
+                    if MStoHS * (1 - VALID_STEP_RATIO) < (rt_times[-3] - prev_state_time) < MStoHS * (
+                            1 + VALID_STEP_RATIO):
+                        MStoHS = ((1 - AVG_CHANGE_RATE) * MStoHS + AVG_CHANGE_RATE * (rt_times[-3] - prev_state_time))
                     prev_state_time = rt_times[-3]
 
 
@@ -135,13 +156,14 @@ for patient_id in range(70, 71):  # choose the id's to perform analysis on
                 # TF is a global minimum after HS
                 elif rt_vals[-1] > rt_vals[-3] and rt_vals[-2] > rt_vals[-3] and \
                         rt_vals[-4] > rt_vals[-3] and rt_vals[-5] > rt_vals[-3] and \
-                        step_state == 2 and rt_vals[-3] < 0.8 * prev_HS and \
-                        rt_times[-3] - prev_state_time >= 0.8 * HStoTF:
+                        step_state == 2 and rt_vals[-3] < VALUE_FLEX * prev_HS and \
+                        rt_times[-3] - prev_state_time >= TIME_FLEX * HStoTF:
                     TF_times.append(rt_times[-3])
                     TF_vals.append(rt_vals[-3])
                     step_state = 3
-                    if HStoTF * 0.6 < (rt_times[-3] - prev_state_time) < HStoTF * 1.4:
-                        HStoTF = (0.8 * HStoTF + 0.2 * (rt_times[-3] - prev_state_time))
+                    if HStoTF * (1 - VALID_STEP_RATIO) < (rt_times[-3] - prev_state_time) < HStoTF * (
+                            1 + VALID_STEP_RATIO):
+                        HStoTF = ((1 - AVG_CHANGE_RATE) * HStoTF + AVG_CHANGE_RATE * (rt_times[-3] - prev_state_time))
                     prev_state_time = rt_times[-3]
 
     # ----------------generate plots-------------------
