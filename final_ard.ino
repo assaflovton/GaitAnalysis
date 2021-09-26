@@ -468,15 +468,15 @@ void loop()
       m5600Data.values.angVelY49 = TF_vals[8], m5600Data.values.time49 = TF_time[8];
       m5600Data.values.angVelY50 = TF_vals[9], m5600Data.values.time50 = TF_time[9];
       m5600Data.values.angVelY51 = TF_vals[10], m5600Data.values.time51 = TF_time[10];
-      m5600Data.values.angVelY52 = TF_vals[11], m5600Data.values.time42 = TF_time[11];
-      m5600Data.values.angVelY53 = TF_vals[12], m5600Data.values.time43 = TF_time[12];
-      m5600Data.values.angVelY54 = TF_vals[13], m5600Data.values.time44 = TF_time[13];
-      m5600Data.values.angVelY55 = TF_vals[14], m5600Data.values.time45 = TF_time[14];
-      m5600Data.values.angVelY56 = TF_vals[15], m5600Data.values.time46 = TF_time[15];
-      m5600Data.values.angVelY57 = TF_vals[16], m5600Data.values.time47 = TF_time[16];
-      m5600Data.values.angVelY58 = TF_vals[17], m5600Data.values.time48 = TF_time[17];
-      m5600Data.values.angVelY59 = TF_vals[18], m5600Data.values.time49 = TF_time[18];
-      m5600Data.values.angVelY60 = TF_vals[19], m5600Data.values.time50 = TF_time[19];
+      m5600Data.values.angVelY52 = TF_vals[11], m5600Data.values.time52 = TF_time[11];
+      m5600Data.values.angVelY53 = TF_vals[12], m5600Data.values.time53 = TF_time[12];
+      m5600Data.values.angVelY54 = TF_vals[13], m5600Data.values.time54 = TF_time[13];
+      m5600Data.values.angVelY55 = TF_vals[14], m5600Data.values.time55 = TF_time[14];
+      m5600Data.values.angVelY56 = TF_vals[15], m5600Data.values.time56 = TF_time[15];
+      m5600Data.values.angVelY57 = TF_vals[16], m5600Data.values.time57 = TF_time[16];
+      m5600Data.values.angVelY58 = TF_vals[17], m5600Data.values.time58 = TF_time[17];
+      m5600Data.values.angVelY59 = TF_vals[18], m5600Data.values.time59 = TF_time[18];
+      m5600Data.values.angVelY60 = TF_vals[19], m5600Data.values.time60 = TF_time[19];
       m5600Data.values.angVelY61 = 0, m5600Data.values.time61 = 0;
       m5600Data.values.angVelY62 = 0, m5600Data.values.time62 = 0;
       m5600Data.values.angVelY63 = 0, m5600Data.values.time63 = 0;
@@ -529,9 +529,12 @@ void loop()
               and (last_times[2] - prev_state_time < TFtoMS * (1 + VALID_STEP_RATIO))) {
             TFtoMS = ((1 - AVG_CHANGE_RATE) * TFtoMS + AVG_CHANGE_RATE * (last_times[2] - prev_state_time));
           }
-          if(index_ms < 5){
+          if(index_ms < 20){
           MS_vals[index_ms] = last_5_array[2], MS_time[index_ms] = last_times[2];
-          index_ms++;}
+          index_ms++;
+          Serial.print("Found MS:");
+          Serial.println(last_5_array[2]);
+          }
           prev_state_time = last_times[2];
         }
         //---------------------------------HS-----------------------------------------------
@@ -545,9 +548,12 @@ void loop()
               (last_times[2] - prev_state_time < MStoHS * (1 + VALID_STEP_RATIO))) {
             MStoHS = ((1 - AVG_CHANGE_RATE) * MStoHS + AVG_CHANGE_RATE * (last_times[2] - prev_state_time));
           }
-          if(index_hs < 5){
+          if(index_hs < 20){
           HS_vals[index_hs] = last_5_array[2], HS_time[index_hs] = last_times[2];
-          index_hs++;}
+          index_hs++;
+          Serial.print("Found HS:");
+          Serial.println(last_5_array[2]);
+          }
           prev_state_time = last_times[2];
           prevMillis = currentMillis;
         }
@@ -562,9 +568,12 @@ void loop()
               (last_times[2] - prev_state_time < HStoTF * (1 + VALID_STEP_RATIO))) {
             HStoTF = ((1 - AVG_CHANGE_RATE) * HStoTF + AVG_CHANGE_RATE * (last_times[2] - prev_state_time));
           }
-          if(index_tf < 5){
+          if(index_tf < 20){
           TF_vals[index_tf] = last_5_array[2], TF_time[index_tf] = last_times[2];
-          index_tf++;}
+          index_tf++;
+          Serial.print("Found TF:");
+          Serial.println(last_5_array[2]);
+          }
           prev_state_time = last_times[2];
           digitalWrite(LED_BUILTIN, LOW);
         }
