@@ -113,6 +113,7 @@ BLEDescriptor mydescriptor1("2103", "ABC1");
 BLEDescriptor mydescriptor2("2103", "ABC2");
 BLEDescriptor mydescriptor3("2103", "ABC3");
 
+// ------------------------- PARAMETERS-------------------
 float angVelX, angVelY, angVelZ;
 
 int INITIAL_TIME_BETWEEN_STATES = 160;
@@ -164,6 +165,8 @@ bool first = false;
 bool test_mode = false;
 int TEST_MODE_TIME = 20000;
 
+//------------------------------------------------------------
+
 void setup() {
   Serial.begin(9600);
   //while (!Serial);
@@ -182,13 +185,13 @@ void setup() {
   String address = BLE.address();
   Serial.println("Our address is [" + address + "]");
 
-  BLE.setDeviceName("IBM Garage Opener");      // this sets Characteristic 0x2a00 of Service 0x1800
+  BLE.setDeviceName("GAIT Anal");      // this sets Characteristic 0x2a00 of Service 0x1800
   // Service 0x1800 is the Generic Access Profile
   // Characteristic 0x2a00 is the Device Name
   // Characteristic 0x2a01 is the "Appearance"
   BLE.setAppearance(384);                      // BLE_APPEARANCE_GENERIC_REMOTE_CONTROL
 
-  BLE.setLocalName("BLE Garage Opener");       // this sets the local name for the advertising data
+  BLE.setLocalName("GAIT Anal");       // this sets the local name for the advertising data
 
   // tell the world about us
   BLE.setAdvertisedService(gaitDetectionService);
@@ -311,13 +314,14 @@ void loop()
     }
   }
   else {
-    //--------------------------------ALGORYTHEM---------------------------------------
+    //--------------------------------ALGORITHM---------------------------------------
     if (!first) {
       startMillis = currentMillis;
       first = true;
     }
+    //if we skipped a step we stop vibrating
     if (currentMillis - prevMillis > 1000) {
-      digitalWrite(LED_BUILTIN, LOW);
+      analogWrite(LED_BUILTIN,0);    
     }
     if (test_mode and (currentMillis >= TEST_MODE_TIME + startMillis)) {
       conn = false;
@@ -541,8 +545,9 @@ void loop()
         else if ((last_5_array[3] > last_5_array[2]) and (last_5_array[1] > last_5_array[2])
                  and step_state == 1 and ((-1 * CORRELATION_RATIO) * prev_MS < last_5_array[2]) and (last_5_array[2] < 0)
                  and (last_times[2] - prev_state_time >= TIME_FLEX * MStoHS)) {
-          digitalWrite(LED_BUILTIN, HIGH);
-          step_state = 2;
+          analogWrite(LED_BUILTIN, vib_power*83); //(255/3 = 85)
+
+      step_state = 2;
           prev_HS = last_5_array[2];
           if (MStoHS * (1 - VALID_STEP_RATIO) < (last_times[2] - prev_state_time) and
               (last_times[2] - prev_state_time < MStoHS * (1 + VALID_STEP_RATIO))) {
@@ -575,8 +580,8 @@ void loop()
           Serial.println(last_5_array[2]);
           }
           prev_state_time = last_times[2];
-          digitalWrite(LED_BUILTIN, LOW);
-        }
+          analogWrite(LED_BUILTIN, 0);
+      }
         //--------------------------------------------------------------------------------------------------
       }
     }
